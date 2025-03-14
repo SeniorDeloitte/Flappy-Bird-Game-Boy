@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Boy Flappy Bird</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "gameboy-case": "#8B8778",
+              "gameboy-dark": "#0f380f",
+              "gameboy-light": "#9bbc0f",
+              "gameboy-lightest": "#c4cfa1",
+              "gameboy-darkest": "#0f380f",
+              "gameboy-button": "#433d3a",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+      body {
+        font-family: "Press Start 2P", cursive;
+        background-color: #f0f0f0;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+      }
+
+      canvas {
+        display: block;
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+      }
+
+      .gameboy-screen {
+        position: relative;
+        overflow: hidden;
+        background-color: #9bbc0f;
+        border: 8px solid #2f2f2f;
+        border-radius: 2px;
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+      }
+
+      .gameboy-case {
+        position: relative;
+        border-radius: 10px 10px 50px 10px;
+        background-color: #8b8778;
+        box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1),
+          5px 5px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .gameboy-label {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        font-size: 8px;
+        color: #444;
+        text-align: center;
+        line-height: 1;
+      }
+
+      .gameboy-label::before {
+        content: "TM";
+        font-size: 6px;
+        vertical-align: top;
+      }
+
+      .nintendo-logo {
+        position: absolute;
+        bottom: 26px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #4a453f;
+        font-size: 10px;
+        font-weight: bold;
+        letter-spacing: -1px;
+      }
+
+      .dpad {
+        position: relative;
+        width: 80px;
+        height: 80px;
+      }
+
+      .dpad-button {
+        position: absolute;
+        background-color: #2f2f2f;
+        border-radius: 2px;
+      }
+
+      .dpad-horizontal {
+        width: 60px;
+        height: 20px;
+        left: 10px;
+        top: 30px;
+      }
+
+      .dpad-vertical {
+        height: 60px;
+        width: 20px;
+        top: 10px;
+        left: 30px;
+      }
+
+      .dpad-center {
+        height: 20px;
+        width: 20px;
+        top: 30px;
+        left: 30px;
+        background-color: #2f2f2f;
+      }
+
+      .action-button {
+        width: 35px;
+        height: 35px;
+        background-color: #922f2f;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        transform: rotate(-30deg);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      .option-button {
+        width: 50px;
+        height: 12px;
+        background-color: #433d3a;
+        border-radius: 10px;
+      }
+
+      .power-led {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #a31300;
+        box-shadow: 0 0 5px #ff0000;
+      }
+
+      .gameboy-stripe {
+        position: absolute;
+        bottom: 60px;
+        left: 15px;
+        right: 15px;
+        height: 3px;
+        background: repeating-linear-gradient(
+          90deg,
+          #6b6559,
+          #6b6559 3px,
+          #877e6d 3px,
+          #877e6d 6px
+        );
+      }
+
+      .score-display {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 4px 8px;
+        background-color: #c4cfa1;
+        border-bottom: 2px solid #0f380f;
+        display: flex;
+        justify-content: space-between;
+        z-index: 10;
+        font-size: 8px;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-200 flex flex-col items-center justify-center h-screen p-4"
+  >
+    <div
+      class="gameboy-case max-w-sm w-full h-[600px] mx-auto p-8 flex flex-col"
+    >
+      <!-- Game Boy Header -->
+      <div class="flex justify-between items-center mb-2 px-2">
+        <div class="power-led"></div>
+        <div class="text-[8px] text-gameboy-darkest font-bold">POWER</div>
+      </div>
+
+      <!-- Game Boy Screen -->
+      <div class="gameboy-screen relative flex-grow mb-6 overflow-hidden">
+        <!-- Score Display (inside screen at top) -->
+        <div class="score-display">
+          <div class="text-gameboy-darkest">
+            SCORE:<span id="score" class="font-bold ml-1">0</span>
+          </div>
+          <div class="text-gameboy-darkest">
+            HI:<span id="highScore" class="font-bold ml-1">0</span>
+          </div>
+        </div>
+
+        <!-- Game Canvas -->
+        <canvas
+          id="gameCanvas"
+          width="160"
+          height="144"
+          class="w-full h-full"
+        ></canvas>
+
+        <!-- Start Screen -->
+        <div
+          id="startScreen"
+          class="absolute inset-0 flex flex-col items-center justify-center"
+        >
+          <h2 class="text-sm text-gameboy-darkest mb-8 mt-6">FLAPPY BIRD</h2>
+          <p class="text-[8px] text-gameboy-darkest mb-6">PRESS START BUTTON</p>
+          <button
+            id="startButton"
+            class="px-4 py-1 text-[8px] bg-gameboy-darkest text-gameboy-lightest border-2 border-gameboy-darkest"
+          >
+            START
+          </button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div
+          id="gameOverScreen"
+          class="absolute inset-0 flex-col items-center justify-center hidden"
+        >
+          <h2 class="text-sm text-gameboy-darkest mb-2 mt-6">GAME OVER</h2>
+          <p id="finalScore" class="text-xs text-gameboy-darkest mb-4">
+            SCORE: 0
+          </p>
+          <button
+            id="restartButton"
+            class="px-4 py-1 text-[8px] bg-gameboy-darkest text-gameboy-lightest border-2 border-gameboy-darkest"
+          >
+            RETRY
+          </button>
+        </div>
+      </div>
+
+      <!-- Game Boy Controls -->
+      <div class="flex justify-between items-center">
+        <!-- D-Pad -->
+        <div class="dpad">
+          <div class="dpad-button dpad-horizontal"></div>
+          <div class="dpad-button dpad-vertical"></div>
+          <div class="dpad-button dpad-center"></div>
+        </div>
+
+        <!-- A/B Buttons -->
+        <div class="flex gap-3">
+          <div class="action-button">B</div>
+          <div class="action-button">A</div>
+        </div>
+      </div>
+
+      <!-- Start/Select Buttons -->
+      <div class="flex justify-center mt-8 gap-8 mb-6">
+        <div class="option-button transform rotate-20"></div>
+        <div class="option-button transform rotate-20"></div>
+      </div>
+
+      <!-- Game Boy Branding -->
+      <div class="nintendo-logo">Nintendo GAME BOY</div>
+    </div>
+
+    <!-- Link to the JavaScript file -->
+    <script src="script.js"></script>
+  </body>
+</html>
