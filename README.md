@@ -1,4 +1,6 @@
 # Flappy Cursor: Game Boy Edition
+![image](https://github.com/user-attachments/assets/f0b3e3bd-6b7d-412f-ab69-3513e98d9f9e)
+
 
 A retro Flappy Bird clone built with vanilla JavaScript and styled with Tailwind CSS, featuring a nostalgic Game Boy aesthetic with pixel art graphics and classic Game Boy color palette.
 
