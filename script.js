@@ -10,8 +10,9 @@ const finalScoreDisplay = document.getElementById("finalScore");
 const highScoreDisplay = document.getElementById("highScore");
 
 // Game constants
-const GRAVITY = 0.45;
-const FLAP_STRENGTH = -6;
+const GRAVITY = 0.25;
+const FLAP_STRENGTH = -4.5;
+const TERMINAL_VELOCITY = 8;
 const PIPE_SPEED = 1.5;
 const PIPE_SPAWN_INTERVAL = 2000; // milliseconds
 const PIPE_WIDTH = 18;
@@ -60,10 +61,10 @@ birdImg.src =
 function drawBird() {
   frameCount++;
 
-  // Calculate rotation based on velocity (limited rotation for Game Boy style)
+  // Calculate rotation based on velocity (more dynamic rotation)
   const rotation = Math.min(
-    Math.PI / 6,
-    Math.max(-Math.PI / 8, bird.velocity * 0.06)
+    Math.PI / 3, // Increased max rotation
+    Math.max(-Math.PI / 4, bird.velocity * 0.08) // Adjusted rotation sensitivity
   );
 
   ctx.save();
@@ -165,8 +166,9 @@ function gameLoop(timestamp) {
   drawBackground();
 
   if (gameStarted && !gameOver) {
-    // Update bird position
+    // Update bird position with terminal velocity
     bird.velocity += GRAVITY;
+    bird.velocity = Math.min(TERMINAL_VELOCITY, bird.velocity); // Limit falling speed
     bird.y += bird.velocity;
 
     // Check if bird hits the ground
